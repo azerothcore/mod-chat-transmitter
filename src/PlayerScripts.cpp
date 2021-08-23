@@ -10,10 +10,10 @@ namespace ModChatTransmitter
         PlayerScripts() : PlayerScript("ModChatTransmitterPlayerScripts")
         { }
 
-        void OnLogin(Player* player)
+        void OnLogin(Player*/* player*/)
         { }
 
-        void OnChat(Player* player, uint32 type, uint32 lang, std::string& msg)
+        void OnChat(Player* player, uint32 type, uint32/* lang*/, std::string& msg)
         {
             if (type == ChatMsg::CHAT_MSG_SAY || type == CHAT_MSG_YELL || type == CHAT_MSG_EMOTE)
             {
@@ -21,7 +21,7 @@ namespace ModChatTransmitter
             }
         }
 
-        void OnChat(Player* player, uint32 type, uint32 lang, std::string& msg, Channel* channel)
+        void OnChat(Player* player, uint32 type, uint32/* lang*/, std::string& msg, Channel* channel)
         {
             ChatTransmitter::Instance().QueueChat(player, type, msg, channel);
         }

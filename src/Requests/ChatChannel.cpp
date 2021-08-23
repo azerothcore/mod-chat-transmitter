@@ -6,8 +6,8 @@ namespace ModChatTransmitter::Requests
     ChatChannel::ChatChannel(Player* player, uint32 type, std::string& msg, Channel* channel)
       : guildId(ChatTransmitter::Instance().GetDiscordGuildId()),
         player(player),
-        type(type),
         text(msg),
+        type(type),
         channel(channel->GetName())
     { }
 

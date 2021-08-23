@@ -6,8 +6,8 @@ namespace ModChatTransmitter::Requests
     Chat::Chat(Player* player, uint32 type, std::string& msg)
       : guildId(ChatTransmitter::Instance().GetDiscordGuildId()),
         player(player),
-        type(type),
-        text(msg)
+        text(msg),
+        type(type)
     {
         AreaTableEntry const* area = sAreaTableStore.LookupEntry(player->GetZoneId());
         zone = area ? area->area_name[LocaleConstant::LOCALE_enUS] : "";
