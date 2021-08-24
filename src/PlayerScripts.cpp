@@ -23,6 +23,10 @@ namespace ModChatTransmitter
 
         void OnChat(Player* player, uint32 type, uint32/* lang*/, std::string& msg, Channel* channel)
         {
+            if (channel->GetName().find("Crb") != std::string::npos)
+            {
+                return;
+            }
             ChatTransmitter::Instance().QueueChat(player, type, msg, channel);
         }
     };
