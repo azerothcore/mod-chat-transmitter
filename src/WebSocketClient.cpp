@@ -184,11 +184,17 @@ namespace ModChatTransmitter
         ready = false;
         LOG_ERROR("server", "[ModChatTransmitter] WebSocket %s error: %s", operation, err.message().c_str());
         LOG_INFO("server", "[ModChatTransmitter] Reconnecting to WebSocket server in %d seconds.", reconnectDelay);
-        if (close)
+
+        int timeSlept = 0;
+        while (timeSlept < reconnectDelay)
         {
-            return;
+            if (close)
+            {
+                return;
+            }
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            timeSlept += 1;
         }
-        std::this_thread::sleep_for(std::chrono::seconds(reconnectDelay));
         reconnectDelay *= 2;
         ++reconnectAttempts;
 
