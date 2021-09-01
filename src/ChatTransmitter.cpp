@@ -3,9 +3,16 @@
 #include "ChatTransmitterScripts.h"
 #include "Requests/Chat.h"
 #include "Requests/ChatChannel.h"
+#include "Requests/CommandResult.h"
+#include "../libs/nlohmann/json.hpp"
 
 namespace ModChatTransmitter
 {
+    Command::Command(std::string& id)
+        : id(id),
+        output("")
+    { }
+
     ChatTransmitter& ChatTransmitter::Instance()
     {
         static ChatTransmitter instance;
@@ -64,6 +71,25 @@ namespace ModChatTransmitter
         }
     }
 
+    void ChatTransmitter::Update()
+    {
+        std::string json;
+        while (wsClient->GetReceivedMessage(json))
+        {
+            nlohmann::json item = nlohmann::json::parse(json);
+            std::string message = item["message"].get<std::string>();
+            nlohmann::json data = item["data"];
+
+            if (message == "command")
+            {
+                std::string id = data["id"].get<std::string>();
+                std::string command = data["command"].get<std::string>();
+                Command* cmdObj = new Command(id);
+                sWorld->QueueCliCommand(new CliCommandHolder(cmdObj, command.c_str(), ChatTransmitter::OnCommandOutput, ChatTransmitter::OnCommandFinished));
+            }
+        }
+    }
+
     void ChatTransmitter::Stop()
     {
         wsClient->Close();
@@ -103,9 +129,35 @@ namespace ModChatTransmitter
 
     void ChatTransmitter::QueueRequest(IRequest* req)
     {
-        if (req && IsEnabled())
+        if (!req)
+        {
+            return;
+        }
+        if (IsEnabled())
         {
             wsClient->QueueMessage(req->GetContents());
         }
+        delete req;
+    }
+
+    void ChatTransmitter::OnCommandOutput(void* arg, const char* text)
+    {
+        if (text && arg)
+        {
+            Command* command = static_cast<Command*>(arg);
+            command->output.append(text);
+        }
+    }
+
+    void ChatTransmitter::OnCommandFinished(void* arg, bool success)
+    {
+        if (!arg)
+        {
+            return;
+        }
+
+        Command* command = static_cast<Command*>(arg);
+        Instance().QueueRequest(new Requests::CommandResult(command->id, command->output, success));
+        delete command;
     }
 }

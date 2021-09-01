@@ -10,6 +10,15 @@
 
 namespace ModChatTransmitter
 {
+    struct Command
+    {
+    public:
+        Command(std::string& id);
+
+        std::string id;
+        std::string output;
+    };
+
     class ChatTransmitter
     {
     public:
@@ -24,6 +33,7 @@ namespace ModChatTransmitter
 
         void QueueChat(Player* player, uint32 type, std::string& msg);
         void QueueChat(Player* player, uint32 type, std::string& msg, Channel* channel);
+        void Update();
         void Stop();
 
     protected:
@@ -33,6 +43,9 @@ namespace ModChatTransmitter
         void StartWebSocketClient();
         void WorkerThread();
         void QueueRequest(IRequest* req);
+
+        static void OnCommandOutput(void* arg, const char* text);
+        static void OnCommandFinished(void* arg, bool success);
 
         std::thread workerThread;
         std::shared_ptr<WebSocketClient> wsClient;

@@ -13,6 +13,11 @@ namespace ModChatTransmitter
         {
             ChatTransmitter::Instance().Stop();
         }
+
+        void OnUpdate(uint32) override
+        {
+            ChatTransmitter::Instance().Update();
+        }
     };
 
     void AddWorldScripts()

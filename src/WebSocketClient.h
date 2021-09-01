@@ -1,10 +1,11 @@
 #ifndef _MOD_CHAT_TRANSMITTER_WEB_SOCKET_CLIENT_H_
 #define _MOD_CHAT_TRANSMITTER_WEB_SOCKET_CLIENT_H_
 
-#include <queue>
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/asio/strand.hpp>
+
+#include "PCQueue.h"
 
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -21,6 +22,7 @@ namespace ModChatTransmitter
         void Run(const std::string& host, int port, const std::string& path);
         void QueueMessage(const std::string& text);
         bool IsReady();
+        bool GetReceivedMessage(std::string &data);
         void Close();
 
     private:
@@ -45,7 +47,9 @@ namespace ModChatTransmitter
         bool close;
         int reconnectDelay;
         int reconnectAttempts;
-        std::queue<std::string> workQueue;
+        ProducerConsumerQueue<std::string> workQueue;
+        ProducerConsumerQueue<std::string> received;
+        std::atomic_bool hasReceivedData;
     };
 }
 

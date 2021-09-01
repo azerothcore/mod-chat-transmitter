@@ -14,7 +14,8 @@ namespace ModChatTransmitter
         close(false),
         reconnectDelay(5),
         reconnectAttempts(0),
-        workQueue()
+        workQueue(),
+        received()
     { }
 
     // Start the asynchronous operation
@@ -30,8 +31,8 @@ namespace ModChatTransmitter
 
     void WebSocketClient::QueueMessage(const std::string& text)
     {
-        bool idle = workQueue.empty();
-        workQueue.push(text);
+        bool idle = workQueue.Empty();
+        workQueue.Push(text);
 
         if (idle && ready)
         {
@@ -51,17 +52,38 @@ namespace ModChatTransmitter
 
     void WebSocketClient::Write()
     {
-        if (workQueue.empty())
+        std::string item;
+        if (!workQueue.Pop(item))
         {
             return;
         }
 
-        ws.async_write(net::buffer(workQueue.front()), beast::bind_front_handler(&WebSocketClient::OnWrite, shared_from_this()));
+        ws.async_write(net::buffer(item), beast::bind_front_handler(&WebSocketClient::OnWrite, shared_from_this()));
     }
 
     void WebSocketClient::Read()
     {
         ws.async_read(buffer, beast::bind_front_handler(&WebSocketClient::OnRead, shared_from_this()));
+    }
+
+    bool WebSocketClient::GetReceivedMessage(std::string& data)
+    {
+        if (close || !hasReceivedData.load())
+        {
+            return false;
+        }
+
+        if (!received.Pop(data))
+        {
+            return false;
+        }
+
+        if (received.Empty())
+        {
+            hasReceivedData.store(false);
+        }
+
+        return true;
     }
 
     void WebSocketClient::Close()
@@ -137,7 +159,6 @@ namespace ModChatTransmitter
             return OnError(err, "write");
         }
 
-        workQueue.pop();
         Write();
     }
 
@@ -150,7 +171,9 @@ namespace ModChatTransmitter
             return OnError(err, "read");
         }
 
-        std::cout << beast::make_printable(buffer.data()) << std::endl;
+        std::string data = beast::buffers_to_string(buffer.data());
+        received.Push(data);
+        hasReceivedData.store(true);
 
         buffer.clear();
         Read();
