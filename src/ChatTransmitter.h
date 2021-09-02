@@ -48,7 +48,7 @@ namespace ModChatTransmitter
         static void OnCommandFinished(void* arg, bool success);
 
         std::thread workerThread;
-        std::shared_ptr<WebSocketClient> wsClient;
+        WebSocketClient* wsClient;
     };
 }
 

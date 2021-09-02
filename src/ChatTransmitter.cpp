@@ -20,6 +20,7 @@ namespace ModChatTransmitter
     }
 
     ChatTransmitter::ChatTransmitter()
+        : wsClient(nullptr)
     {
         if (!IsEnabled())
         {
@@ -92,6 +93,10 @@ namespace ModChatTransmitter
 
     void ChatTransmitter::Stop()
     {
+        if (!wsClient)
+        {
+            return;
+        }
         wsClient->Close();
         workerThread.join();
     }
@@ -104,7 +109,7 @@ namespace ModChatTransmitter
 
     void ChatTransmitter::StartWebSocketClient()
     {
-        if (!IsEnabled())
+        if (!IsEnabled() || wsClient)
         {
             return;
         }
@@ -118,13 +123,16 @@ namespace ModChatTransmitter
         net::io_context ioc;
 
         // Launch the asynchronous operation
-        wsClient = std::make_shared<WebSocketClient>(ioc);
+        wsClient = new WebSocketClient(ioc);
         std::string key = GetBotWsKey();
         wsClient->Run(GetBotWsHost(), GetBotWsPort(), "/?key=" + key);
 
         // Run the I/O service. The call will return when
         // the socket is closed.
         ioc.run();
+
+        delete wsClient;
+        wsClient = nullptr;
     }
 
     void ChatTransmitter::QueueRequest(IRequest* req)
@@ -133,7 +141,7 @@ namespace ModChatTransmitter
         {
             return;
         }
-        if (IsEnabled())
+        if (IsEnabled() && wsClient)
         {
             wsClient->QueueMessage(req->GetContents());
         }
