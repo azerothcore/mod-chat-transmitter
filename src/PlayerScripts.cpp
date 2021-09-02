@@ -23,9 +23,13 @@ namespace ModChatTransmitter
 
         void OnChat(Player* player, uint32 type, uint32/* lang*/, std::string& msg, Channel* channel)
         {
-            if (channel->GetName().find("Crb") != std::string::npos || channel->GetName().find("LFGForwarder") != std::string::npos)
+            std::string addonChannels[] = { "Crb", "LFGForwarder", "TCForwarder", "LFGShout", "xtensionxtooltip2", "QuickHealMod" };
+            for (const std::string& addonChannel : addonChannels)
             {
-                return;
+                if (channel->GetName().find(addonChannel) != std::string::npos)
+                {
+                    return;
+                }
             }
             ChatTransmitter::Instance().QueueChat(player, type, msg, channel);
         }
