@@ -58,7 +58,7 @@ namespace ModChatTransmitter
 
     void ChatTransmitter::QueueChat(Player* player, uint32 type, std::string& msg)
     {
-        if (IsEnabled())
+        if (wsClient && IsEnabled())
         {
             QueueRequest(new Requests::Chat(player, type, msg));
         }
@@ -66,7 +66,7 @@ namespace ModChatTransmitter
 
     void ChatTransmitter::QueueChat(Player* player, uint32 type, std::string& msg, Channel* channel)
     {
-        if (IsEnabled())
+        if (wsClient && IsEnabled())
         {
             QueueRequest(new Requests::ChatChannel(player, type, msg, channel));
         }
@@ -75,7 +75,7 @@ namespace ModChatTransmitter
     void ChatTransmitter::Update()
     {
         std::string json;
-        while (wsClient->GetReceivedMessage(json))
+        while (wsClient && wsClient->GetReceivedMessage(json))
         {
             nlohmann::json item = nlohmann::json::parse(json);
             std::string message = item["message"].get<std::string>();

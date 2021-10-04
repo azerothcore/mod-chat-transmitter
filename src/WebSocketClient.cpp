@@ -68,7 +68,7 @@ namespace ModChatTransmitter
 
     bool WebSocketClient::GetReceivedMessage(std::string& data)
     {
-        if (close || !hasReceivedData.load())
+        if (!ready || close || !hasReceivedData.load())
         {
             return false;
         }
