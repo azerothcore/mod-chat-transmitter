@@ -28,7 +28,7 @@ namespace ModChatTransmitter
         }
 
         AddScripts();
-        StartWebSocketClient();
+        Start();
     }
 
     bool ChatTransmitter::IsEnabled() const
@@ -106,7 +106,7 @@ namespace ModChatTransmitter
         ModChatTransmitter::AddWorldScripts();
     }
 
-    void ChatTransmitter::StartWebSocketClient()
+    void ChatTransmitter::Start()
     {
         if (!IsEnabled() || wsClient)
         {

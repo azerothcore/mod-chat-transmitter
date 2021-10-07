@@ -18,6 +18,17 @@ namespace ModChatTransmitter
         {
             ChatTransmitter::Instance().Update();
         }
+
+        void OnAfterConfigLoad(bool reload) override
+        {
+            if (!reload)
+            {
+                return;
+            }
+
+            ChatTransmitter::Instance().Stop();
+            ChatTransmitter::Instance().Start();
+        }
     };
 
     void AddWorldScripts()

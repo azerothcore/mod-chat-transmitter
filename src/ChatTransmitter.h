@@ -35,12 +35,12 @@ namespace ModChatTransmitter
         void QueueChat(Player* player, uint32 type, std::string& msg, Channel* channel);
         void Update();
         void Stop();
+        void Start();
 
     protected:
         ChatTransmitter();
 
         void AddScripts() const;
-        void StartWebSocketClient();
         void WorkerThread();
         void QueueRequest(IRequest* req);
 
