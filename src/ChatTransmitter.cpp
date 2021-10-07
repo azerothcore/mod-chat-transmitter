@@ -93,11 +93,10 @@ namespace ModChatTransmitter
 
     void ChatTransmitter::Stop()
     {
-        if (!wsClient)
+        if (wsClient)
         {
-            return;
+            wsClient->Close();
         }
-        wsClient->Close();
         workerThread.join();
     }
 

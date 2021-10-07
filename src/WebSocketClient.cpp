@@ -205,10 +205,14 @@ namespace ModChatTransmitter
         }
 
         ready = false;
+        int maxReconnectAttempts = 10;
         if (!close)
         {
             LOG_ERROR("server", "[ModChatTransmitter] WebSocket %s error: %s", operation, err.message().c_str());
-            LOG_INFO("server", "[ModChatTransmitter] Reconnecting to WebSocket server in %d seconds.", reconnectDelay);
+            if (reconnectAttempts + 1 < maxReconnectAttempts)
+            {
+                LOG_INFO("server", "[ModChatTransmitter] Reconnecting to WebSocket server in %d seconds.", reconnectDelay);
+            }
         }
 
         int timeSlept = 0;
@@ -224,7 +228,7 @@ namespace ModChatTransmitter
         reconnectDelay *= 2;
         ++reconnectAttempts;
 
-        if (reconnectAttempts < 10)
+        if (reconnectAttempts < maxReconnectAttempts)
         {
             Resolve();
         }
