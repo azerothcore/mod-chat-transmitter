@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include <Player.h>
+
 namespace ModChatTransmitter
 {
     struct PlayerInfo
