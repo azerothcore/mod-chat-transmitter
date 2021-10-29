@@ -44,7 +44,7 @@ namespace ModChatTransmitter
         void WorkerThread();
         void QueueRequest(IRequest* req);
 
-        static void OnCommandOutput(void* arg, const char* text);
+        static void OnCommandOutput(void* arg, std::string_view text);
         static void OnCommandFinished(void* arg, bool success);
 
         std::thread workerThread;
