@@ -2,6 +2,7 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/asio/strand.hpp>
 
+#include "Log.h"
 #include "WebSocketClient.h"
 
 namespace ModChatTransmitter
