@@ -147,9 +147,9 @@ namespace ModChatTransmitter
         delete req;
     }
 
-    void ChatTransmitter::OnCommandOutput(void* arg, const char* text)
+    void ChatTransmitter::OnCommandOutput(void* arg, std::string_view text)
     {
-        if (text && arg)
+        if (!text.empty() && arg)
         {
             Command* command = static_cast<Command*>(arg);
             command->output.append(text);
