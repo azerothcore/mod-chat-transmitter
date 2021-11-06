@@ -1,30 +1,32 @@
-#include "ChatChannel.h"
+#include "RequestChat.h"
 #include "../ChatTransmitter.h"
 
 namespace ModChatTransmitter::Requests
 {
-    ChatChannel::ChatChannel(Player* player, uint32 type, std::string& msg, Channel* channel)
+    Chat::Chat(Player* player, uint32 type, std::string& msg)
       : guildId(ChatTransmitter::Instance().GetDiscordGuildId()),
         player(player),
         text(msg),
-        type(type),
-        channel(channel->GetName())
-    { }
+        type(type)
+    {
+        AreaTableEntry const* area = sAreaTableStore.LookupEntry(player->GetZoneId());
+        zone = area ? area->area_name[LocaleConstant::LOCALE_enUS] : "";
+    }
 
-    ChatChannel& ChatChannel::operator=(const ChatChannel& other)
+    Chat& Chat::operator=(const Chat& other)
     {
         player = other.player;
         text = other.text;
         type = other.type;
-        channel = other.channel;
+        zone = other.zone;
 
         return *this;
     }
 
-    std::string ChatChannel::GetContents()
+    std::string Chat::GetContents()
     {
         nlohmann::json jsonObj;
-        jsonObj["message"] = "channelChat";
+        jsonObj["message"] = "localChat";
         nlohmann::to_json(jsonObj["data"], *this);
         return nlohmann::to_string(jsonObj);
     }
