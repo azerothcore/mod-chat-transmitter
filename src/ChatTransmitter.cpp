@@ -1,9 +1,9 @@
 #include "Config.h"
 #include "ChatTransmitter.h"
 #include "ChatTransmitterScripts.h"
-#include "Requests/Chat.h"
-#include "Requests/ChatChannel.h"
-#include "Requests/CommandResult.h"
+#include "Requests/RequestChat.h"
+#include "Requests/RequestChatChannel.h"
+#include "Requests/RequestCommandResult.h"
 #include "../libs/nlohmann/json.hpp"
 
 namespace ModChatTransmitter

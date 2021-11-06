@@ -1,4 +1,4 @@
-#include "CommandResult.h"
+#include "RequestCommandResult.h"
 #include "../ChatTransmitter.h"
 
 namespace ModChatTransmitter::Requests
