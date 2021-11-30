@@ -33,27 +33,27 @@ namespace ModChatTransmitter
 
     bool ChatTransmitter::IsEnabled() const
     {
-        return ConfigMgr::instance()->GetBoolDefault("ChatTransmitter.Enabled", false);
+        return ConfigMgr::instance()->GetOption<bool>("ChatTransmitter.Enabled", false);
     }
 
     std::string ChatTransmitter::GetDiscordGuildId() const
     {
-        return ConfigMgr::instance()->GetStringDefault("ChatTransmitter.DiscordGuildId", "");
+        return ConfigMgr::instance()->GetOption<std::string>("ChatTransmitter.DiscordGuildId", "");
     }
 
     std::string ChatTransmitter::GetBotWsHost() const
     {
-        return ConfigMgr::instance()->GetStringDefault("ChatTransmitter.BotWsHost", "127.0.0.1");
+        return ConfigMgr::instance()->GetOption<std::string>("ChatTransmitter.BotWsHost", "127.0.0.1");
     }
 
     std::string ChatTransmitter::GetBotWsKey() const
     {
-        return ConfigMgr::instance()->GetStringDefault("ChatTransmitter.BotWsKey", "");
+        return ConfigMgr::instance()->GetOption<std::string>("ChatTransmitter.BotWsKey", "");
     }
 
     int ChatTransmitter::GetBotWsPort() const
     {
-        return ConfigMgr::instance()->GetIntDefault("ChatTransmitter.BotWsPort", 22141);
+        return ConfigMgr::instance()->GetOption<int32>("ChatTransmitter.BotWsPort", 22141);
     }
 
     void ChatTransmitter::QueueChat(Player* player, uint32 type, std::string& msg)
