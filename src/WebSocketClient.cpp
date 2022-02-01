@@ -146,7 +146,7 @@ namespace ModChatTransmitter
         ready = true;
         reconnectDelay = 5;
         reconnectAttempts = 0;
-        LOG_INFO("server", "[ModChatTransmitter] Connected to WebSocket server.");
+        LOG_INFO("module", "[ModChatTransmitter] Connected to WebSocket server.");
 
         Read();
         Write();
@@ -196,12 +196,12 @@ namespace ModChatTransmitter
             websocket::close_reason cr = ws.reason();
             if (cr.code == 4000)
             {
-                LOG_ERROR("server", "[ModChatTransmitter] Incorrect WebSocket key!");
+                LOG_ERROR("module", "[ModChatTransmitter] Incorrect WebSocket key!");
                 return;
             }
             if (cr.code == 4001)
             {
-                LOG_ERROR("server", "[ModChatTransmitter] Access denied to the WebSocket server.");
+                LOG_ERROR("module", "[ModChatTransmitter] Access denied to the WebSocket server.");
                 return;
             }
         }
@@ -210,10 +210,11 @@ namespace ModChatTransmitter
         int maxReconnectAttempts = 10;
         if (!close)
         {
-            LOG_ERROR("server", "[ModChatTransmitter] WebSocket %s error: %s", operation, err.message().c_str());
+            LOG_ERROR("module", "[ModChatTransmitter] WebSocket {} error: {}", operation, err.message());
+
             if (reconnectAttempts + 1 < maxReconnectAttempts)
             {
-                LOG_INFO("server", "[ModChatTransmitter] Reconnecting to WebSocket server in %d seconds.", reconnectDelay);
+                LOG_INFO("module", "[ModChatTransmitter] Reconnecting to WebSocket server in {} seconds.", reconnectDelay);
             }
         }
 
