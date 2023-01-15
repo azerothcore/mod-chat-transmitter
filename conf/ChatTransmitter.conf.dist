@@ -25,9 +25,20 @@
 #        Description: Sets the Discord guild ID to transmit messages to
 #        Default:     ""
 #
+#    ChatTransmitter.ElunaDatabaseInfo
+#        Description: Database connection settings for the Eluna database.
+#        Example:     "hostname;port;username;password;database"
+#                     ".;somenumber;username;password;database" - (Use named pipes on Windows
+#                                                                 "enable-named-pipe" to [mysqld]
+#                                                                 section my.ini)
+#                     ".;/path/to/unix_socket;username;password;database" - (use Unix sockets on
+#                                                                           Unix/Linux)
+#        Default:     "127.0.0.1;3306;acore;acore;acore_eluna"
+#
 
 ChatTransmitter.Enabled = 0
 ChatTransmitter.BotWsHost = "127.0.0.1"
 ChatTransmitter.BotWsPort = 22141
 ChatTransmitter.BotWsKey = ""
 ChatTransmitter.DiscordGuildId = ""
+ChatTransmitter.ElunaDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_eluna"

@@ -7,13 +7,14 @@
 #include "Channel.h"
 #include "IRequest.h"
 #include "WebSocketClient.h"
+#include "DatabaseManager.h"
 
 namespace ModChatTransmitter
 {
     struct Command
     {
     public:
-        Command(std::string& id);
+        Command(const std::string& id);
 
         std::string id;
         std::string output;
@@ -30,6 +31,7 @@ namespace ModChatTransmitter
         std::string GetBotWsHost() const;
         std::string GetBotWsKey() const;
         int GetBotWsPort() const;
+        std::string GetElunaDatabaseInfo() const;
 
         void QueueChat(Player* player, uint32 type, std::string& msg);
         void QueueChat(Player* player, uint32 type, std::string& msg, Channel* channel);
@@ -41,14 +43,21 @@ namespace ModChatTransmitter
         ChatTransmitter();
 
         void AddScripts() const;
-        void WorkerThread();
+        void WebSocketThread();
+        void DatabaseThread();
         void QueueRequest(IRequest* req);
+        void HandleCommand(const std::string& id, const std::string& command);
+        void HandleQuery(const std::string& id, const std::string& query, QueryDatabase dbType);
+        void OnAnticheatReport(Player* player, uint16 reportType);
 
         static void OnCommandOutput(void* arg, std::string_view text);
         static void OnCommandFinished(void* arg, bool success);
 
-        std::thread workerThread;
+        std::thread wsThread;
         WebSocketClient* wsClient;
+
+        std::thread dbThread;
+        DatabaseManager* dbManager;
     };
 }
 

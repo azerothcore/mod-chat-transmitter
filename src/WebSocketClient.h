@@ -6,6 +6,7 @@
 #include <boost/asio/strand.hpp>
 
 #include "PCQueue.h"
+#include "IRequest.h"
 
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -20,7 +21,7 @@ namespace ModChatTransmitter
     public:
         explicit WebSocketClient(net::io_context& ioc);
         void Run(const std::string& host, int port, const std::string& path);
-        void QueueMessage(const std::string& text);
+        void QueueRequest(IRequest* request);
         bool IsReady();
         bool GetReceivedMessage(std::string &data);
         void Close();
@@ -38,16 +39,18 @@ namespace ModChatTransmitter
         void OnError(beast::error_code err, const char* operation);
 
         tcp::resolver resolver;
-        websocket::stream<beast::tcp_stream> ws;
-        beast::flat_buffer buffer;
+        std::optional<websocket::stream<beast::tcp_stream>> ws;
+        beast::flat_buffer readBuffer;
+        std::string writeData;
+        net::mutable_buffer writeBuffer;
         std::string host;
         std::string path;
         int port;
-        bool ready;
-        bool close;
+        std::atomic_bool ready;
+        std::atomic_bool close;
         int reconnectDelay;
         int reconnectAttempts;
-        ProducerConsumerQueue<std::string> workQueue;
+        ProducerConsumerQueue<IRequest*> workQueue;
         ProducerConsumerQueue<std::string> received;
         std::atomic_bool hasReceivedData;
     };

@@ -3,7 +3,7 @@
 
 namespace ModChatTransmitter::Requests
 {
-    CommandResult::CommandResult(std::string& commandId, std::string& output, bool success)
+    CommandResult::CommandResult(const std::string& commandId, const std::string& output, bool success)
       : commandId(commandId),
         output(output),
         success(success)

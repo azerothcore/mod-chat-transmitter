@@ -1,5 +1,5 @@
-#ifndef _MOD_CHAT_TRANSMITTER_REQUESTS_CHAT_H_
-#define _MOD_CHAT_TRANSMITTER_REQUESTS_CHAT_H_
+#ifndef _MOD_CHAT_TRANSMITTER_REQUESTS_REQUEST_CHAT_H_
+#define _MOD_CHAT_TRANSMITTER_REQUESTS_REQUEST_CHAT_H_
 
 #include "../../libs/nlohmann/json.hpp"
 
@@ -26,4 +26,4 @@ namespace ModChatTransmitter::Requests
     };
 }
 
-#endif // _MOD_CHAT_TRANSMITTER_REQUESTS_CHAT_H_
+#endif // _MOD_CHAT_TRANSMITTER_REQUESTS_REQUEST_CHAT_H_

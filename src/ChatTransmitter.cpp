@@ -1,14 +1,20 @@
 #include "Config.h"
+
 #include "ChatTransmitter.h"
 #include "ChatTransmitterScripts.h"
 #include "Requests/RequestChat.h"
 #include "Requests/RequestChatChannel.h"
+#include "Requests/RequestQueryResult.h"
 #include "Requests/RequestCommandResult.h"
-#include "../libs/nlohmann/json.hpp"
+#include "Requests/RequestAnticheatReport.h"
+
+#if __has_include("mod-anticheat/src/AnticheatMgr.h")
+#include "mod-anticheat/src/AnticheatMgr.h"
+#endif
 
 namespace ModChatTransmitter
 {
-    Command::Command(std::string& id)
+    Command::Command(const std::string& id)
         : id(id),
         output("")
     { }
@@ -20,7 +26,8 @@ namespace ModChatTransmitter
     }
 
     ChatTransmitter::ChatTransmitter()
-        : wsClient(nullptr)
+        : wsClient(nullptr),
+        dbManager(nullptr)
     {
         if (!IsEnabled())
         {
@@ -28,32 +35,36 @@ namespace ModChatTransmitter
         }
 
         AddScripts();
-        Start();
     }
 
     bool ChatTransmitter::IsEnabled() const
     {
-        return ConfigMgr::instance()->GetOption<bool>("ChatTransmitter.Enabled", false);
+        return sConfigMgr->GetOption<bool>("ChatTransmitter.Enabled", false);
     }
 
     std::string ChatTransmitter::GetDiscordGuildId() const
     {
-        return ConfigMgr::instance()->GetOption<std::string>("ChatTransmitter.DiscordGuildId", "");
+        return sConfigMgr->GetOption<std::string>("ChatTransmitter.DiscordGuildId", "");
     }
 
     std::string ChatTransmitter::GetBotWsHost() const
     {
-        return ConfigMgr::instance()->GetOption<std::string>("ChatTransmitter.BotWsHost", "127.0.0.1");
+        return sConfigMgr->GetOption<std::string>("ChatTransmitter.BotWsHost", "127.0.0.1");
     }
 
     std::string ChatTransmitter::GetBotWsKey() const
     {
-        return ConfigMgr::instance()->GetOption<std::string>("ChatTransmitter.BotWsKey", "");
+        return sConfigMgr->GetOption<std::string>("ChatTransmitter.BotWsKey", "");
     }
 
     int ChatTransmitter::GetBotWsPort() const
     {
-        return ConfigMgr::instance()->GetOption<int32>("ChatTransmitter.BotWsPort", 22141);
+        return sConfigMgr->GetOption<int32>("ChatTransmitter.BotWsPort", 22141);
+    }
+
+    std::string ChatTransmitter::GetElunaDatabaseInfo() const
+    {
+        return sConfigMgr->GetOption<std::string>("ChatTransmitter.ElunaDatabaseInfo", "127.0.0.1;3306;acore;acore;acore_eluna");
     }
 
     void ChatTransmitter::QueueChat(Player* player, uint32 type, std::string& msg)
@@ -80,14 +91,25 @@ namespace ModChatTransmitter
             nlohmann::json item = nlohmann::json::parse(json);
             std::string message = item["message"].get<std::string>();
             nlohmann::json data = item["data"];
+            std::string id = data["id"].get<std::string>();
 
             if (message == "command")
             {
-                std::string id = data["id"].get<std::string>();
                 std::string command = data["command"].get<std::string>();
-                Command* cmdObj = new Command(id);
-                sWorld->QueueCliCommand(new CliCommandHolder(cmdObj, command.c_str(), ChatTransmitter::OnCommandOutput, ChatTransmitter::OnCommandFinished));
+                HandleCommand(id, command);
             }
+            else if (message == "query")
+            {
+                std::string query = data["query"].get<std::string>();
+                int db = data["database"].get<int>();
+                HandleQuery(id, query, (QueryDatabase)db);
+            }
+        }
+
+        Requests::QueryResult* queryResult;
+        while (dbManager && dbManager->GetResult(queryResult))
+        {
+            QueueRequest(queryResult);
         }
     }
 
@@ -97,7 +119,13 @@ namespace ModChatTransmitter
         {
             wsClient->Close();
         }
-        workerThread.join();
+        wsThread.join();
+
+        if (dbManager)
+        {
+            dbManager->Stop();
+        }
+        dbThread.join();
     }
 
     void ChatTransmitter::AddScripts() const
@@ -108,15 +136,32 @@ namespace ModChatTransmitter
 
     void ChatTransmitter::Start()
     {
-        if (!IsEnabled() || wsClient)
+        if (!IsEnabled() || wsClient || dbManager)
         {
             return;
         }
 
-        workerThread = std::thread(&ChatTransmitter::WorkerThread, this);
+        wsThread = std::thread(&ChatTransmitter::WebSocketThread, this);
+        dbThread = std::thread(&ChatTransmitter::DatabaseThread, this);
+
+#ifdef sAnticheatMgr
+        sAnticheatMgr->OnReport += [this](Player* player, uint16 reportType)
+        {
+            QueueRequest(new Requests::AnticheatReport(player, reportType));
+        };
+#endif
     }
 
-    void ChatTransmitter::WorkerThread()
+    void ChatTransmitter::DatabaseThread()
+    {
+        dbManager = new DatabaseManager();
+        dbManager->Start(); // This will block until stopped
+
+        delete dbManager;
+        dbManager = nullptr;
+    }
+
+    void ChatTransmitter::WebSocketThread()
     {
         // The io_context is required for all I/O
         net::io_context ioc;
@@ -140,11 +185,33 @@ namespace ModChatTransmitter
         {
             return;
         }
+
         if (IsEnabled() && wsClient)
         {
-            wsClient->QueueMessage(req->GetContents());
+            wsClient->QueueRequest(req);
         }
-        delete req;
+        else
+        {
+            delete req;
+        }
+    }
+
+    void ChatTransmitter::HandleCommand(const std::string& id, const std::string& command)
+    {
+        Command* cmdObj = new Command(id);
+        sWorld->QueueCliCommand(new CliCommandHolder(cmdObj, command.c_str(), ChatTransmitter::OnCommandOutput, ChatTransmitter::OnCommandFinished));
+    }
+
+    void ChatTransmitter::HandleQuery(const std::string& id, const std::string& query, QueryDatabase dbType)
+    {
+        if (dbManager)
+        {
+            dbManager->QueueQuery(id, query, dbType);
+        }
+        else
+        {
+            QueueRequest(new Requests::QueryResult(id, false));
+        }
     }
 
     void ChatTransmitter::OnCommandOutput(void* arg, std::string_view text)
@@ -166,5 +233,10 @@ namespace ModChatTransmitter
         Command* command = static_cast<Command*>(arg);
         Instance().QueueRequest(new Requests::CommandResult(command->id, command->output, success));
         delete command;
+    }
+
+    void ChatTransmitter::OnAnticheatReport(Player* player, uint16 reportType)
+    {
+        QueueRequest(new Requests::AnticheatReport(player, reportType));
     }
 }

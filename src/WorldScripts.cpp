@@ -9,6 +9,11 @@ namespace ModChatTransmitter
         WorldScripts() : WorldScript("ModChatTransmitterWorldScripts")
         { }
 
+        void OnStartup() override
+        {
+            ChatTransmitter::Instance().Start();
+        }
+
         void OnShutdown() override
         {
             ChatTransmitter::Instance().Stop();

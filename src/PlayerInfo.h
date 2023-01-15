@@ -16,6 +16,7 @@ namespace ModChatTransmitter
             level(player->getLevel()),
             raceId(player->getRace()),
             classId(player->getClass()),
+            gender(player->getGender()),
             accountGuid(player->GetSession()->GetAccountId()),
             lastIpAddr(player->GetSession()->GetRemoteAddress())
         {
@@ -29,6 +30,7 @@ namespace ModChatTransmitter
             level = other.level;
             raceId = other.raceId;
             classId = other.classId;
+            gender = other.gender;
             accountName = other.accountName;
             accountGuid = other.accountGuid;
 
@@ -40,11 +42,12 @@ namespace ModChatTransmitter
         uint8 level;
         uint8 raceId;
         uint8 classId;
+        uint8 gender;
         std::string accountName;
         uint32 accountGuid;
         std::string lastIpAddr;
 
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(PlayerInfo, name, guid, level, raceId, classId, accountName, accountGuid, lastIpAddr)
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(PlayerInfo, name, guid, level, raceId, classId, gender, accountName, accountGuid, lastIpAddr)
     };
 }
 

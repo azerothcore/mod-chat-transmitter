@@ -12,18 +12,22 @@ namespace ModChatTransmitter
     WebSocketClient::WebSocketClient(net::io_context& ioc)
         : resolver(net::make_strand(ioc)),
         ws(net::make_strand(ioc)),
+        host(""),
+        path(""),
+        port(0),
         ready(false),
         close(false),
         reconnectDelay(5),
         reconnectAttempts(0),
         workQueue(),
-        received()
+        received(),
+        hasReceivedData(false)
     { }
 
     // Start the asynchronous operation
     void WebSocketClient::Run(const std::string& host, int port, const std::string& path)
     {
-        ready = false;
+        ready.store(false);
         this->host = host;
         this->port = port;
         this->path = path;
@@ -31,20 +35,23 @@ namespace ModChatTransmitter
         Resolve();
     }
 
-    void WebSocketClient::QueueMessage(const std::string& text)
+    void WebSocketClient::QueueRequest(IRequest* request)
     {
         bool idle = workQueue.Empty();
-        workQueue.Push(text);
+        workQueue.Push(request);
 
-        if (idle && ready)
+        if (idle && ready.load())
         {
-            Write();
+            net::post(ws->get_executor(), [this]()
+                {
+                    Write();
+                });
         }
     }
 
     bool WebSocketClient::IsReady()
     {
-        return ready;
+        return ready.load();
     }
 
     void WebSocketClient::Resolve()
@@ -54,23 +61,26 @@ namespace ModChatTransmitter
 
     void WebSocketClient::Write()
     {
-        std::string item;
-        if (!workQueue.Pop(item))
+        IRequest* request;
+        if (!workQueue.Pop(request))
         {
             return;
         }
 
-        ws.async_write(net::buffer(item), beast::bind_front_handler(&WebSocketClient::OnWrite, this));
+        writeData = request->GetContents();
+        writeBuffer = net::buffer(writeData);
+        delete request;
+        ws->async_write(writeBuffer, beast::bind_front_handler(&WebSocketClient::OnWrite, this));
     }
 
     void WebSocketClient::Read()
     {
-        ws.async_read(buffer, beast::bind_front_handler(&WebSocketClient::OnRead, this));
+        ws->async_read(readBuffer, beast::bind_front_handler(&WebSocketClient::OnRead, this));
     }
 
     bool WebSocketClient::GetReceivedMessage(std::string& data)
     {
-        if (!ready || close || !hasReceivedData.load())
+        if (!ready.load() || close.load() || !hasReceivedData.load())
         {
             return false;
         }
@@ -90,13 +100,13 @@ namespace ModChatTransmitter
 
     void WebSocketClient::Close()
     {
-        ready = false;
-        close = true;
+        ready.store(false);
+        close.store(true);
 
         websocket::close_reason cr;
         cr.code = 4010;
         cr.reason = "Server closed";
-        ws.async_close(cr, beast::bind_front_handler(&WebSocketClient::OnClose, this));
+        ws->async_close(cr, beast::bind_front_handler(&WebSocketClient::OnClose, this));
     }
 
     void WebSocketClient::OnResolve(beast::error_code err, tcp::resolver::results_type results)
@@ -107,10 +117,10 @@ namespace ModChatTransmitter
         }
 
         // Set the timeout for the operation
-        beast::get_lowest_layer(ws).expires_after(std::chrono::seconds(30));
+        beast::get_lowest_layer(*ws).expires_after(std::chrono::seconds(30));
 
         // Make the connection on the IP address we get from a lookup
-        beast::get_lowest_layer(ws).async_connect(results, beast::bind_front_handler(&WebSocketClient::OnConnect, this));
+        beast::get_lowest_layer(*ws).async_connect(results, beast::bind_front_handler(&WebSocketClient::OnConnect, this));
     }
 
     void WebSocketClient::OnConnect(beast::error_code err, tcp::resolver::results_type::endpoint_type ep)
@@ -122,10 +132,10 @@ namespace ModChatTransmitter
 
         // Turn off the timeout on the tcp_stream, because
         // the websocket stream has its own timeout system.
-        beast::get_lowest_layer(ws).expires_never();
+        beast::get_lowest_layer(*ws).expires_never();
 
         // Set suggested timeout settings for the websocket
-        ws.set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));
+        ws->set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));
 
         // This will provide the value of the
         // Host HTTP header during the WebSocket handshake.
@@ -133,7 +143,7 @@ namespace ModChatTransmitter
         std::string handshakeHost = host + ':' + std::to_string(ep.port());
 
         // Perform the websocket handshake
-        ws.async_handshake(handshakeHost, path, beast::bind_front_handler(&WebSocketClient::OnHandshake, this));
+        ws->async_handshake(handshakeHost, path, beast::bind_front_handler(&WebSocketClient::OnHandshake, this));
     }
 
     void WebSocketClient::OnHandshake(beast::error_code err)
@@ -143,7 +153,7 @@ namespace ModChatTransmitter
             return OnError(err, "handshake");
         }
 
-        ready = true;
+        ready.store(true);
         reconnectDelay = 5;
         reconnectAttempts = 0;
         LOG_INFO("module", "[ModChatTransmitter] Connected to WebSocket server.");
@@ -155,6 +165,9 @@ namespace ModChatTransmitter
     void WebSocketClient::OnWrite(beast::error_code err, std::size_t bytes_transferred)
     {
         boost::ignore_unused(bytes_transferred);
+
+        writeData = "";
+        writeBuffer = net::buffer(writeData);
 
         if (err)
         {
@@ -173,11 +186,11 @@ namespace ModChatTransmitter
             return OnError(err, "read");
         }
 
-        std::string data = beast::buffers_to_string(buffer.data());
+        std::string data = beast::buffers_to_string(readBuffer.data());
         received.Push(data);
         hasReceivedData.store(true);
 
-        buffer.clear();
+        readBuffer.clear();
         Read();
     }
 
@@ -193,7 +206,7 @@ namespace ModChatTransmitter
     {
         if (!strcmp(operation, "read"))
         {
-            websocket::close_reason cr = ws.reason();
+            websocket::close_reason cr = ws->reason();
             if (cr.code == 4000)
             {
                 LOG_ERROR("module", "[ModChatTransmitter] Incorrect WebSocket key!");
@@ -206,11 +219,18 @@ namespace ModChatTransmitter
             }
         }
 
-        ready = false;
+        ready.store(false);
         int maxReconnectAttempts = 10;
-        if (!close)
+        if (!close.load())
         {
             LOG_ERROR("module", "[ModChatTransmitter] WebSocket {} error: {}", operation, err.message());
+
+            if (!strcmp(operation, "write"))
+            {
+                // Don't try to reconnect after a write error, the read error
+                // after the disconnect will start the reconnects
+                return;
+            }
 
             if (reconnectAttempts + 1 < maxReconnectAttempts)
             {
@@ -221,7 +241,7 @@ namespace ModChatTransmitter
         int timeSlept = 0;
         while (timeSlept < reconnectDelay)
         {
-            if (close)
+            if (close.load())
             {
                 return;
             }
@@ -233,6 +253,7 @@ namespace ModChatTransmitter
 
         if (reconnectAttempts < maxReconnectAttempts)
         {
+            ws.emplace(ws->get_executor()); // Reconstruct the stream
             Resolve();
         }
     }
