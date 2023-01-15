@@ -48,6 +48,7 @@ namespace ModChatTransmitter
         int port;
         std::atomic_bool ready;
         std::atomic_bool close;
+        std::atomic_bool writing;
         int reconnectDelay;
         int reconnectAttempts;
         ProducerConsumerQueue<IRequest*> workQueue;

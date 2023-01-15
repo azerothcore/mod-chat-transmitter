@@ -17,6 +17,7 @@ namespace ModChatTransmitter
         port(0),
         ready(false),
         close(false),
+        writing(false),
         reconnectDelay(5),
         reconnectAttempts(0),
         workQueue(),
@@ -61,12 +62,18 @@ namespace ModChatTransmitter
 
     void WebSocketClient::Write()
     {
+        if (writing.load())
+        {
+            return;
+        }
+
         IRequest* request;
         if (!workQueue.Pop(request))
         {
             return;
         }
 
+        writing.store(true);
         writeData = request->GetContents();
         writeBuffer = net::buffer(writeData);
         delete request;
@@ -168,6 +175,7 @@ namespace ModChatTransmitter
 
         writeData = "";
         writeBuffer = net::buffer(writeData);
+        writing.store(false);
 
         if (err)
         {
