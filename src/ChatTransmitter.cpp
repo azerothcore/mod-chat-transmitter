@@ -234,9 +234,4 @@ namespace ModChatTransmitter
         Instance().QueueRequest(new Requests::CommandResult(command->id, command->output, success));
         delete command;
     }
-
-    void ChatTransmitter::OnAnticheatReport(Player* player, uint16 reportType)
-    {
-        QueueRequest(new Requests::AnticheatReport(player, reportType));
-    }
 }

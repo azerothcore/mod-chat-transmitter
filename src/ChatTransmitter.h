@@ -48,7 +48,6 @@ namespace ModChatTransmitter
         void QueueRequest(IRequest* req);
         void HandleCommand(const std::string& id, const std::string& command);
         void HandleQuery(const std::string& id, const std::string& query, QueryDatabase dbType);
-        void OnAnticheatReport(Player* player, uint16 reportType);
 
         static void OnCommandOutput(void* arg, std::string_view text);
         static void OnCommandFinished(void* arg, bool success);
