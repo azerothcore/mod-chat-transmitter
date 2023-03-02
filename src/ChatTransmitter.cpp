@@ -26,8 +26,8 @@ namespace ModChatTransmitter
     }
 
     ChatTransmitter::ChatTransmitter()
-        : wsClient(nullptr),
-        dbManager(nullptr)
+        : wsClient(nullptr)/*,
+        dbManager(nullptr)*/
     {
         if (!IsEnabled())
         {
@@ -106,11 +106,11 @@ namespace ModChatTransmitter
             }
         }
 
-        Requests::QueryResult* queryResult;
+        /*Requests::QueryResult* queryResult;
         while (dbManager && dbManager->GetResult(queryResult))
         {
             QueueRequest(queryResult);
-        }
+        }*/
     }
 
     void ChatTransmitter::Stop()
@@ -121,11 +121,11 @@ namespace ModChatTransmitter
         }
         wsThread.join();
 
-        if (dbManager)
+        /*if (dbManager)
         {
             dbManager->Stop();
         }
-        dbThread.join();
+        dbThread.join();*/
     }
 
     void ChatTransmitter::AddScripts() const
@@ -136,13 +136,13 @@ namespace ModChatTransmitter
 
     void ChatTransmitter::Start()
     {
-        if (!IsEnabled() || wsClient || dbManager)
+        if (!IsEnabled() || wsClient/* || dbManager*/)
         {
             return;
         }
 
         wsThread = std::thread(&ChatTransmitter::WebSocketThread, this);
-        dbThread = std::thread(&ChatTransmitter::DatabaseThread, this);
+        //dbThread = std::thread(&ChatTransmitter::DatabaseThread, this);
 
 #ifdef sAnticheatMgr
         sAnticheatMgr->OnReport += [this](Player* player, uint16 reportType)
@@ -152,14 +152,14 @@ namespace ModChatTransmitter
 #endif
     }
 
-    void ChatTransmitter::DatabaseThread()
+    /*void ChatTransmitter::DatabaseThread()
     {
         dbManager = new DatabaseManager();
         dbManager->Start(); // This will block until stopped
 
         delete dbManager;
         dbManager = nullptr;
-    }
+    }*/
 
     void ChatTransmitter::WebSocketThread()
     {
@@ -204,11 +204,11 @@ namespace ModChatTransmitter
 
     void ChatTransmitter::HandleQuery(const std::string& id, const std::string& query, QueryDatabase dbType)
     {
-        if (dbManager)
+        /*if (dbManager)
         {
             dbManager->QueueQuery(id, query, dbType);
         }
-        else
+        else*/
         {
             QueueRequest(new Requests::QueryResult(id, false));
         }

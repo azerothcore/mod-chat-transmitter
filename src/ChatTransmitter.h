@@ -44,7 +44,7 @@ namespace ModChatTransmitter
 
         void AddScripts() const;
         void WebSocketThread();
-        void DatabaseThread();
+        //void DatabaseThread();
         void QueueRequest(IRequest* req);
         void HandleCommand(const std::string& id, const std::string& command);
         void HandleQuery(const std::string& id, const std::string& query, QueryDatabase dbType);
@@ -55,8 +55,8 @@ namespace ModChatTransmitter
         std::thread wsThread;
         WebSocketClient* wsClient;
 
-        std::thread dbThread;
-        DatabaseManager* dbManager;
+        //std::thread dbThread;
+        //DatabaseManager* dbManager;
     };
 }
 
