@@ -3,6 +3,7 @@
 #include "ChatTransmitter.h"
 #include "ChatTransmitterScripts.h"
 #include "Requests/RequestChat.h"
+#include "Requests/RequestElunaError.h"
 #include "Requests/RequestChatChannel.h"
 #include "Requests/RequestQueryResult.h"
 #include "Requests/RequestCommandResult.h"
@@ -10,6 +11,10 @@
 
 #if __has_include("mod-anticheat/src/AnticheatMgr.h")
 #include "mod-anticheat/src/AnticheatMgr.h"
+#endif
+
+#if __has_include("mod-eluna/src/LuaEngine/LuaEngine.h")
+#include "mod-eluna/src/LuaEngine/LuaEngine.h"
 #endif
 
 namespace ModChatTransmitter
@@ -148,6 +153,13 @@ namespace ModChatTransmitter
         sAnticheatMgr->OnReport += [this](Player* player, uint16 reportType)
         {
             QueueRequest(new Requests::AnticheatReport(player, reportType));
+        };
+#endif
+
+#ifdef sEluna
+        sEluna->OnError += [this](std::string trace)
+        {
+            QueueRequest(new Requests::ElunaError(trace));
         };
 #endif
     }
