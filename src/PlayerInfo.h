@@ -13,7 +13,7 @@ namespace ModChatTransmitter
         PlayerInfo(Player* player)
           : name(player->GetName()),
             guid(player->GetGUID().GetCounter()),
-            level(player->getLevel()),
+            level(player->GetLevel()),
             raceId(player->getRace()),
             classId(player->getClass()),
             gender(player->getGender()),
