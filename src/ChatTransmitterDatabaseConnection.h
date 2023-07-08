@@ -6,21 +6,16 @@
 class ChatTransmitterDatabaseConnection : public MySQLConnection
 {
 public:
-    enum Statements : uint32
-    { };
-
-    ChatTransmitterDatabaseConnection(MySQLConnectionInfo& connInfo);
-    ChatTransmitterDatabaseConnection(ProducerConsumerQueue<SQLOperation*>* q, MySQLConnectionInfo& connInfo);
+    explicit ChatTransmitterDatabaseConnection(MySQLConnectionInfo& connInfo);
+    ChatTransmitterDatabaseConnection(MySQLConnectionInfo& connInfo, ProducerConsumerQueue<AsyncOperation*>* dbQueue);
 
     ~ChatTransmitterDatabaseConnection() override;
-
-    void DoPrepareStatements() override;
 
     std::string GetLastErrorString();
     uint64 GetAffectedRows();
 
 protected:
-    bool _HandleMySQLErrno(uint32 errNo, uint8 attempts = 5) override;
+    bool HandleMySQLError(uint32 errNo, uint8 attempts = 5) override;
 };
 
 #endif

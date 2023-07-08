@@ -1,9 +1,14 @@
+/*
+ *
+ * */
+
 #include "Config.h"
 #include "Common.h"
 #include "DatabaseEnv.h"
 #include "Time/GameTime.h"
 #include "DatabaseManager.h"
 #include "ChatTransmitter.h"
+#include "DatabaseAsyncOperation.h"
 #include "Requests/RequestQueryResult.h"
 
 namespace ModChatTransmitter
@@ -84,7 +89,7 @@ namespace ModChatTransmitter
             return;
         }
 
-        ResultSet* result = db->Query(query);
+        auto result = db->Query(query);
         if (!result)
         {
             if (db->GetLastError())
@@ -164,11 +169,11 @@ namespace ModChatTransmitter
         workQueue.Cancel();
     }
 
-    void DatabaseManager::InitializeDatabase(const MySQLConnectionInfo* srcConnInfo, MySQLConnectionInfo** connInfo, ProducerConsumerQueue<SQLOperation*>** sqlQueue, ChatTransmitterDatabaseConnection** database)
+    void DatabaseManager::InitializeDatabase(const MySQLConnectionInfo* srcConnInfo, MySQLConnectionInfo** connInfo, ProducerConsumerQueue<AsyncOperation*>** sqlQueue, ChatTransmitterDatabaseConnection** database)
     {
         *connInfo = new MySQLConnectionInfo(*srcConnInfo);
-        *sqlQueue = new ProducerConsumerQueue<SQLOperation*>();
-        *database = new ChatTransmitterDatabaseConnection(*sqlQueue, **connInfo);
+        *sqlQueue = new ProducerConsumerQueue<AsyncOperation*>();
+        *database = new ChatTransmitterDatabaseConnection(**connInfo, *sqlQueue);
 
         uint32 res = (*database)->Open();
         if (res)
@@ -178,14 +183,14 @@ namespace ModChatTransmitter
         }
     }
 
-    void DatabaseManager::InitializeDatabase(const std::string& connectionString, MySQLConnectionInfo** connInfo, ProducerConsumerQueue<SQLOperation*>** sqlQueue, ChatTransmitterDatabaseConnection** database)
+    void DatabaseManager::InitializeDatabase(const std::string& connectionString, MySQLConnectionInfo** connInfo, ProducerConsumerQueue<AsyncOperation*>** sqlQueue, ChatTransmitterDatabaseConnection** database)
     {
-        MySQLConnectionInfo* srcConnInfo = new MySQLConnectionInfo(connectionString);
+        auto srcConnInfo = new MySQLConnectionInfo(connectionString);
         InitializeDatabase(srcConnInfo, connInfo, sqlQueue, database);
         delete srcConnInfo;
     }
 
-    void DatabaseManager::CleanupDatabase(MySQLConnectionInfo* connInfo, ProducerConsumerQueue<SQLOperation*>* sqlQueue, ChatTransmitterDatabaseConnection** database)
+    void DatabaseManager::CleanupDatabase(MySQLConnectionInfo* connInfo, ProducerConsumerQueue<AsyncOperation*>* sqlQueue, ChatTransmitterDatabaseConnection** database)
     {
         (*database)->Close();
         sqlQueue->Cancel();
