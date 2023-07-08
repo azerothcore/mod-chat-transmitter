@@ -5,24 +5,18 @@
 class MySQLPreparedStatement {};
 
 ChatTransmitterDatabaseConnection::ChatTransmitterDatabaseConnection(MySQLConnectionInfo& connInfo)
-    : MySQLConnection(connInfo)
+    : MySQLConnection(connInfo, nullptr, false)
 {
 }
 
-ChatTransmitterDatabaseConnection::ChatTransmitterDatabaseConnection(ProducerConsumerQueue<SQLOperation*>* q, MySQLConnectionInfo& connInfo)
-    : MySQLConnection(q, connInfo)
+ChatTransmitterDatabaseConnection::ChatTransmitterDatabaseConnection(MySQLConnectionInfo& connInfo, ProducerConsumerQueue<AsyncOperation*>* dbQueue)
+    : MySQLConnection(connInfo, dbQueue, false)
 {
 }
 
-ChatTransmitterDatabaseConnection::~ChatTransmitterDatabaseConnection()
-{
-}
+ChatTransmitterDatabaseConnection::~ChatTransmitterDatabaseConnection() = default;
 
-void ChatTransmitterDatabaseConnection::DoPrepareStatements()
-{
-}
-
-bool ChatTransmitterDatabaseConnection::_HandleMySQLErrno(uint32 errNo, uint8 attempts)
+bool ChatTransmitterDatabaseConnection::HandleMySQLError(uint32 errNo, uint8 attempts)
 {
     switch (errNo)
     {
@@ -31,17 +25,17 @@ bool ChatTransmitterDatabaseConnection::_HandleMySQLErrno(uint32 errNo, uint8 at
         case ER_PARSE_ERROR:
             return false;
         default:
-            return MySQLConnection::_HandleMySQLErrno(errNo, attempts);
+            return MySQLConnection::HandleMySQLError(errNo, attempts);
     }
 }
 
 std::string ChatTransmitterDatabaseConnection::GetLastErrorString()
 {
-    const char* err = mysql_error(reinterpret_cast<MYSQL*>(m_Mysql));
+    const char* err = mysql_error(reinterpret_cast<MYSQL*>(_mysqlHandle));
     return std::string(err);
 }
 
 uint64 ChatTransmitterDatabaseConnection::GetAffectedRows()
 {
-    return mysql_affected_rows(reinterpret_cast<MYSQL*>(m_Mysql));
+    return mysql_affected_rows(reinterpret_cast<MYSQL*>(_mysqlHandle));
 }

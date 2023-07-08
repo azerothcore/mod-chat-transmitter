@@ -4,6 +4,9 @@
 #include "PCQueue.h"
 #include "Requests/RequestQueryResult.h"
 #include "ChatTransmitterDatabaseConnection.h"
+#include <utility>
+
+class AsyncOperation;
 
 namespace ModChatTransmitter
 {
@@ -26,9 +29,9 @@ namespace ModChatTransmitter
 
     private:
         void HandleQuery(const std::string& id, const std::string& query, QueryDatabase dbType);
-        void InitializeDatabase(const std::string& connectionString, MySQLConnectionInfo** connInfo, ProducerConsumerQueue<SQLOperation*>** sqlQueue, ChatTransmitterDatabaseConnection** database);
-        void InitializeDatabase(const MySQLConnectionInfo* srcConnInfo, MySQLConnectionInfo** connInfo, ProducerConsumerQueue<SQLOperation*>** sqlQueue, ChatTransmitterDatabaseConnection** database);
-        void CleanupDatabase(MySQLConnectionInfo* connInfo, ProducerConsumerQueue<SQLOperation*>* sqlQueue, ChatTransmitterDatabaseConnection** database);
+        void InitializeDatabase(const std::string& connectionString, MySQLConnectionInfo** connInfo, ProducerConsumerQueue<AsyncOperation*>** sqlQueue, ChatTransmitterDatabaseConnection** database);
+        void InitializeDatabase(const MySQLConnectionInfo* srcConnInfo, MySQLConnectionInfo** connInfo, ProducerConsumerQueue<AsyncOperation*>** sqlQueue, ChatTransmitterDatabaseConnection** database);
+        void CleanupDatabase(MySQLConnectionInfo* connInfo, ProducerConsumerQueue<AsyncOperation*>* sqlQueue, ChatTransmitterDatabaseConnection** database);
         bool IsValidUtf8(const Binary& data);
         void Cleanup();
 
@@ -38,9 +41,9 @@ namespace ModChatTransmitter
             std::string query;
             QueryDatabase dbType;
 
-            WorkItem(const std::string& id, const std::string& query, QueryDatabase dbType)
-                : id(id),
-                query(query),
+            WorkItem(std::string id, std::string query, QueryDatabase dbType)
+                : id(std::move(id)),
+                query(std::move(query)),
                 dbType(dbType)
             { }
         };
@@ -52,22 +55,22 @@ namespace ModChatTransmitter
         long long nextDbPingTime;
 
         MySQLConnectionInfo* authConnInfo;
-        ProducerConsumerQueue<SQLOperation*>* authSqlQueue;
+        ProducerConsumerQueue<AsyncOperation*>* authSqlQueue;
         ChatTransmitterDatabaseConnection* authDatabase;
 
         MySQLConnectionInfo* charsConnInfo;
-        ProducerConsumerQueue<SQLOperation*>* charsSqlQueue;
+        ProducerConsumerQueue<AsyncOperation*>* charsSqlQueue;
         ChatTransmitterDatabaseConnection* charsDatabase;
 
         MySQLConnectionInfo* worldConnInfo;
-        ProducerConsumerQueue<SQLOperation*>* worldSqlQueue;
+        ProducerConsumerQueue<AsyncOperation*>* worldSqlQueue;
         ChatTransmitterDatabaseConnection* worldDatabase;
 
         MySQLConnectionInfo* elunaConnInfo;
-        ProducerConsumerQueue<SQLOperation*>* elunaSqlQueue;
+        ProducerConsumerQueue<AsyncOperation*>* elunaSqlQueue;
         ChatTransmitterDatabaseConnection* elunaDatabase;
 
-        std::atomic_bool stop;
+        std::atomic<bool> stop;
     };
 }
 
