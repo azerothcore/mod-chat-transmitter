@@ -1,6 +1,9 @@
 #ifndef _MOD_CHAT_TRANSMITTER_WEB_SOCKET_CLIENT_H_
 #define _MOD_CHAT_TRANSMITTER_WEB_SOCKET_CLIENT_H_
 
+#include <atomic>
+#include <optional>
+
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/asio/strand.hpp>
