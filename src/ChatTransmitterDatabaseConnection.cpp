@@ -22,7 +22,7 @@ void ChatTransmitterDatabaseConnection::DoPrepareStatements()
 {
 }
 
-bool ChatTransmitterDatabaseConnection::_HandleMySQLErrno(uint32 errNo, uint8 attempts)
+bool ChatTransmitterDatabaseConnection::_HandleMySQLErrno(uint32 errNo, char const* err, uint8 attempts)
 {
     switch (errNo)
     {
@@ -31,7 +31,7 @@ bool ChatTransmitterDatabaseConnection::_HandleMySQLErrno(uint32 errNo, uint8 at
         case ER_PARSE_ERROR:
             return false;
         default:
-            return MySQLConnection::_HandleMySQLErrno(errNo, attempts);
+            return MySQLConnection::_HandleMySQLErrno(errNo, mysql_stmt_error(msql_STMT), attempts);
     }
 }
 
