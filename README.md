@@ -4,6 +4,8 @@ Module: mod-chat-transmitter allows you to send and recieve information from you
 
 The module main job is to allow a connection between worldserver and your discord bot.
 
+This guide was made for and tested on a Windows 10 machine.
+
 ## Requirements
 
 You will need to have: [mod-eluna](https://github.com/azerothcore/mod-eluna) alongside this module into your AzerothCore Modules and Server.
