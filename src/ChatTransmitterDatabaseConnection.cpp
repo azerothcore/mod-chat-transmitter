@@ -32,7 +32,7 @@ bool ChatTransmitterDatabaseConnection::_HandleMySQLErrno(uint32 errNo, char con
         case ER_PARSE_ERROR:
             return false;
         default:
-            return MySQLConnection::_HandleMySQLErrno(errNo, mysql_stmt_error(m_Mysql), attempts);
+            return MySQLConnection::_HandleMySQLErrno(errNo, mysql_error(m_Mysql), attempts);
     }
 }
 
