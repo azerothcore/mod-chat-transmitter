@@ -4,6 +4,7 @@
 #include "PCQueue.h"
 #include "Requests/RequestQueryResult.h"
 #include "ChatTransmitterDatabaseConnection.h"
+#include "Field.h"
 
 namespace ModChatTransmitter
 {
