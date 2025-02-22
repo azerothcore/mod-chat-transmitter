@@ -7,7 +7,11 @@ namespace ModChatTransmitter
     class PlayerScripts : public PlayerScript
     {
     public:
-        PlayerScripts() : PlayerScript("ModChatTransmitterPlayerScripts")
+        PlayerScripts() : PlayerScript("ModChatTransmitterPlayerScripts", {
+            PLAYERHOOK_ON_LOGIN,
+            PLAYERHOOK_ON_CHAT,
+            PLAYERHOOK_ON_CHAT_WITH_CHANNEL
+        })
         { }
 
         void OnLogin(Player*/* player*/)
