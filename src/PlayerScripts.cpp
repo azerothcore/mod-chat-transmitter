@@ -8,16 +8,12 @@ namespace ModChatTransmitter
     {
     public:
         PlayerScripts() : PlayerScript("ModChatTransmitterPlayerScripts", {
-            PLAYERHOOK_ON_LOGIN,
             PLAYERHOOK_ON_CHAT,
             PLAYERHOOK_ON_CHAT_WITH_CHANNEL
         })
         { }
 
-        void OnPlayerLogin(Player*/* player*/)
-        { }
-
-        void OnPlayerChat(Player* player, uint32 type, uint32/* lang*/, std::string& msg)
+        void OnPlayerChat(Player* player, uint32 type, uint32/* lang*/, std::string& msg) override
         {
             if (type == ChatMsg::CHAT_MSG_SAY || type == CHAT_MSG_YELL || type == CHAT_MSG_EMOTE)
             {
@@ -25,7 +21,7 @@ namespace ModChatTransmitter
             }
         }
 
-        void OnPlayerChat(Player* player, uint32 type, uint32/* lang*/, std::string& msg, Channel* channel)
+        void OnPlayerChat(Player* player, uint32 type, uint32/* lang*/, std::string& msg, Channel* channel) override
         {
             std::string addonChannels[] = { "Crb", "LFGForwarder", "TCForwarder", "LFGShout", "xtensionxtooltip2", "QuickHealMod" };
             for (const std::string& addonChannel : addonChannels)
