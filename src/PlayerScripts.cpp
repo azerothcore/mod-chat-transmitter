@@ -13,25 +13,21 @@ namespace ModChatTransmitter
         })
         { }
 
-        void OnPlayerCanUseChat(Player* player, uint32 type, uint32/* lang*/, std::string& msg) override
+        bool OnPlayerCanUseChat(Player* player, uint32 type, uint32/* lang*/, std::string& msg) override
         {
             if (type == ChatMsg::CHAT_MSG_SAY || type == CHAT_MSG_YELL || type == CHAT_MSG_EMOTE)
-            {
                 ChatTransmitter::Instance().QueueChat(player, type, msg);
-            }
 
             return true;
         }
 
-        void OnPlayerCanUseChat(Player* player, uint32 type, uint32/* lang*/, std::string& msg, Channel* channel) override
+        bool OnPlayerCanUseChat(Player* player, uint32 type, uint32/* lang*/, std::string& msg, Channel* channel) override
         {
             std::string addonChannels[] = { "Crb", "LFGForwarder", "TCForwarder", "LFGShout", "xtensionxtooltip2", "QuickHealMod" };
             for (const std::string& addonChannel : addonChannels)
             {
                 if (channel->GetName().find(addonChannel) != std::string::npos)
-                {
                     return true;
-                }
             }
             ChatTransmitter::Instance().QueueChat(player, type, msg, channel);
 
