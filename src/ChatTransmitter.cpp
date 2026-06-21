@@ -8,6 +8,7 @@
 #include "Requests/RequestQueryResult.h"
 #include "Requests/RequestCommandResult.h"
 #include "Requests/RequestAnticheatReport.h"
+#include "Requests/RequestNotification.h"
 
 #if __has_include("mod-anticheat/src/AnticheatMgr.h")
 #include "mod-anticheat/src/AnticheatMgr.h"
@@ -85,6 +86,14 @@ namespace ModChatTransmitter
         if (wsClient && IsEnabled())
         {
             QueueRequest(new Requests::ChatChannel(player, type, msg, channel));
+        }
+    }
+
+    void ChatTransmitter::QueueNotification(std::string const& source, std::string const& message)
+    {
+        if (wsClient && IsEnabled())
+        {
+            QueueRequest(new Requests::Notification(source, message));
         }
     }
 

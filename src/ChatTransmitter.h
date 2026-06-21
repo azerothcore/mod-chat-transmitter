@@ -35,6 +35,9 @@ namespace ModChatTransmitter
 
         void QueueChat(Player* player, uint32 type, std::string& msg);
         void QueueChat(Player* player, uint32 type, std::string& msg, Channel* channel);
+
+        // Generic entry point for other modules to push a Discord notification.
+        void QueueNotification(std::string const& source, std::string const& message);
         void Update();
         void Stop();
         void Start();
@@ -59,5 +62,7 @@ namespace ModChatTransmitter
         //DatabaseManager* dbManager;
     };
 }
+
+#define sChatTransmitter (&ModChatTransmitter::ChatTransmitter::Instance())
 
 #endif // _MOD_CHAT_TRANSMITTER_H_
