@@ -4,7 +4,7 @@
 #include <vector>
 #include "Define.h"
 
-#include "../../libs/nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 #include "../IRequest.h"
 
