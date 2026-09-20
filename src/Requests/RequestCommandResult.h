@@ -1,7 +1,7 @@
 #ifndef _MOD_CHAT_TRANSMITTER_REQUESTS_REQUEST_COMMAND_RESULT_H_
 #define _MOD_CHAT_TRANSMITTER_REQUESTS_REQUEST_COMMAND_RESULT_H_
 
-#include "../../libs/nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 #include "../IRequest.h"
 
