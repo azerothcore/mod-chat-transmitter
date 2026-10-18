@@ -187,8 +187,9 @@ namespace ModChatTransmitter
 
     void DatabaseManager::CleanupDatabase(MySQLConnectionInfo* connInfo, ProducerConsumerQueue<SQLOperation*>* sqlQueue, ChatTransmitterDatabaseConnection** database)
     {
-        (*database)->Close();
+        // Close() joins the connection's worker thread, which only exits once its queue is cancelled
         sqlQueue->Cancel();
+        (*database)->Close();
         delete *database;
         delete sqlQueue;
         delete connInfo;
