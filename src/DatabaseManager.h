@@ -22,11 +22,13 @@ namespace ModChatTransmitter
         DatabaseManager();
         void Start();
         void QueueQuery(const std::string& id, const std::string& query, QueryDatabase dbType);
+        void KeepAlive();
         bool GetResult(Requests::QueryResult*& outResult);
         void Stop();
 
     private:
         void HandleQuery(const std::string& id, const std::string& query, QueryDatabase dbType);
+        void PingDatabases();
         void InitializeDatabase(const std::string& connectionString, MySQLConnectionInfo** connInfo, ProducerConsumerQueue<SQLOperation*>** sqlQueue, ChatTransmitterDatabaseConnection** database);
         void InitializeDatabase(const MySQLConnectionInfo* srcConnInfo, MySQLConnectionInfo** connInfo, ProducerConsumerQueue<SQLOperation*>** sqlQueue, ChatTransmitterDatabaseConnection** database);
         void CleanupDatabase(MySQLConnectionInfo* connInfo, ProducerConsumerQueue<SQLOperation*>* sqlQueue, ChatTransmitterDatabaseConnection** database);
@@ -38,11 +40,13 @@ namespace ModChatTransmitter
             std::string id;
             std::string query;
             QueryDatabase dbType;
+            bool ping;
 
-            WorkItem(const std::string& id, const std::string& query, QueryDatabase dbType)
+            WorkItem(const std::string& id, const std::string& query, QueryDatabase dbType, bool ping = false)
                 : id(id),
                 query(query),
-                dbType(dbType)
+                dbType(dbType),
+                ping(ping)
             { }
         };
 
@@ -50,7 +54,7 @@ namespace ModChatTransmitter
         ProducerConsumerQueue<Requests::QueryResult*> results;
 
         uint32 dbPingInterval;
-        long long nextDbPingTime;
+        long long nextDbPingTime; // only touched by KeepAlive() on the world thread
 
         MySQLConnectionInfo* authConnInfo;
         ProducerConsumerQueue<SQLOperation*>* authSqlQueue;

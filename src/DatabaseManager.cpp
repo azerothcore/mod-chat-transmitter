@@ -31,8 +31,6 @@ namespace ModChatTransmitter
             return;
         }
 
-        nextDbPingTime = GameTime::GetGameTimeMS().count() + static_cast<long long>(dbPingInterval * MINUTE * IN_MILLISECONDS);
-
         while (true)
         {
             WorkItem* item = nullptr;
@@ -43,7 +41,14 @@ namespace ModChatTransmitter
             }
             if (item)
             {
-                HandleQuery(item->id, item->query, item->dbType);
+                if (item->ping)
+                {
+                    PingDatabases();
+                }
+                else
+                {
+                    HandleQuery(item->id, item->query, item->dbType);
+                }
                 delete item;
             }
         }
@@ -55,6 +60,31 @@ namespace ModChatTransmitter
     {
         WorkItem* item = new WorkItem(id, query, dbType);
         workQueue.Push(item);
+    }
+
+    // The worker thread sleeps on workQueue, so the pings are queued from the world thread. Without them
+    // MySQL drops the idle connections after wait_timeout and closing them at shutdown raises SIGPIPE.
+    void DatabaseManager::KeepAlive()
+    {
+        long long now = GameTime::GetGameTimeMS().count();
+        if (now < nextDbPingTime)
+        {
+            return;
+        }
+
+        nextDbPingTime = now + static_cast<long long>(dbPingInterval * MINUTE * IN_MILLISECONDS);
+        workQueue.Push(new WorkItem("", "", QueryDatabase::Auth, true));
+    }
+
+    void DatabaseManager::PingDatabases()
+    {
+        for (ChatTransmitterDatabaseConnection* db : { authDatabase, charsDatabase, worldDatabase, elunaDatabase })
+        {
+            if (db)
+            {
+                db->Ping();
+            }
+        }
     }
 
     void DatabaseManager::HandleQuery(const std::string& id, const std::string& query, QueryDatabase dbType)
