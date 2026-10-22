@@ -125,6 +125,11 @@ namespace ModChatTransmitter
         {
             QueueRequest(queryResult);
         }
+
+        if (dbManager)
+        {
+            dbManager->KeepAlive();
+        }
     }
 
     void ChatTransmitter::Stop()
