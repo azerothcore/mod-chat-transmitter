@@ -18,22 +18,20 @@
 #        Default:     22141
 #
 #    ChatTransmitter.BotWsKey
-#        Description: The secret key used to connect to the WebSocket server. This should be the same value as the "secretKey" field in the Discord bot's configuration.
+#        Description: The secret key used to connect to the WebSocket server. This must be the same value as
+#                     SECRET_KEY in the bot's .env file. Use a long random string without & # or ".
 #        Default:     ""
 #
 #    ChatTransmitter.DiscordGuildId
-#        Description: Sets the Discord guild ID to transmit messages to
+#        Description: The id of the Discord server to send messages to
 #        Default:     ""
 #
 #    ChatTransmitter.ElunaDatabaseInfo
-#        Description: Database connection settings for the Eluna database.
-#        Example:     "hostname;port;username;password;database"
-#                     ".;somenumber;username;password;database" - (Use named pipes on Windows
-#                                                                 "enable-named-pipe" to [mysqld]
-#                                                                 section my.ini)
-#                     ".;/path/to/unix_socket;username;password;database" - (use Unix sockets on
-#                                                                           Unix/Linux)
-#        Default:     "127.0.0.1;3306;acore;acore;acore_eluna"
+#        Description: Only used when the worldserver is built with Eluna (mod-ale or mod-eluna). Database
+#                     connection settings for the Eluna database, used by the bot's /query command.
+#                     Leave it empty to skip it. Without Eluna this setting does nothing.
+#        Example:     "127.0.0.1;3306;acore;acore;acore_eluna"
+#        Default:     ""
 #
 
 ChatTransmitter.Enabled = 0
@@ -41,4 +39,100 @@ ChatTransmitter.BotWsHost = "127.0.0.1"
 ChatTransmitter.BotWsPort = 22141
 ChatTransmitter.BotWsKey = ""
 ChatTransmitter.DiscordGuildId = ""
-ChatTransmitter.ElunaDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_eluna"
+ChatTransmitter.ElunaDatabaseInfo = ""
+
+#
+#    ChatTransmitter.SendAccountInfo
+#        Description: Send account names, account ids and IP addresses of players to the bot (used by the old
+#                     staff tools /pinfo and the anticheat reports). Keep it off unless only staff can read
+#                     every channel the bot writes to.
+#        Default:     0 - Off
+#                     1 - On
+#
+#    ChatTransmitter.IgnoreBots
+#        Description: Ignore playerbots (players without a game client) for chat, deaths, level ups and
+#                     boss kills done only by bots.
+#        Default:     1 - On
+#                     0 - Off
+#
+
+ChatTransmitter.SendAccountInfo = 0
+ChatTransmitter.IgnoreBots = 1
+
+#
+#    ChatTransmitter.Events.ServerStatus
+#        Description: Tell Discord when the server is online and when it shuts down.
+#        Default:     1 - On
+#                     0 - Off
+#
+#    ChatTransmitter.Events.Deaths
+#        Description: Player deaths sent to Discord.
+#        Default:     1 - Only deaths to a boss (with the boss's name)
+#                     2 - Every death (with the killer when it is a creature)
+#                     0 - Off
+#
+#    ChatTransmitter.Events.Deaths.MinLevel
+#        Description: Deaths below this level are not sent.
+#        Default:     10
+#
+#    ChatTransmitter.Events.LevelUp.Milestones
+#        Description: Levels that are announced, separated by commas. Empty turns level ups off.
+#        Default:     "10,20,30,40,50,60,70,80"
+#
+#    ChatTransmitter.Events.BossKills
+#        Description: Boss kills (dungeon bosses and world bosses).
+#        Default:     1 - Only the first kill of each boss on this realm, per difficulty
+#                     2 - Every boss kill (realm first kills are marked)
+#                     0 - Off
+#
+#    ChatTransmitter.Events.Expeditions
+#        Description: Expedition completions from mod-temucraft-expeditions. Does nothing when that module
+#                     is not installed.
+#        Default:     1 - On
+#                     0 - Off
+#
+#    ChatTransmitter.Events.Queue
+#        Description: Send the rows of the chat_transmitter_event_queue table (characters database) to Discord.
+#                     Any module or tool can add a row there to post a message.
+#        Default:     1 - On
+#                     0 - Off
+#
+#    ChatTransmitter.Events.PollInterval
+#        Description: Seconds between two reads of the expedition and event queue tables (at least 5).
+#        Default:     30
+#
+
+ChatTransmitter.Events.ServerStatus = 1
+ChatTransmitter.Events.Deaths = 1
+ChatTransmitter.Events.Deaths.MinLevel = 10
+ChatTransmitter.Events.LevelUp.Milestones = "10,20,30,40,50,60,70,80"
+ChatTransmitter.Events.BossKills = 1
+ChatTransmitter.Events.Expeditions = 1
+ChatTransmitter.Events.Queue = 1
+ChatTransmitter.Events.PollInterval = 30
+
+#
+#    ChatTransmitter.Relay.Channels
+#        Description: Custom chat channels that Discord messages may be written into, separated by commas.
+#                     In-game chat of custom channels always goes to the bot; the bot only posts the
+#                     channels you link to a Discord channel.
+#        Default:     "World"
+#
+#    ChatTransmitter.Relay.Guilds
+#        Description: Guild ids (guild.guildid in the characters database) whose guild chat goes to Discord
+#                     and back, separated by commas. Officer chat is never sent. Empty means no guild.
+#        Default:     ""
+#
+#    ChatTransmitter.Relay.Prefix
+#        Description: Text in front of a Discord message shown in game.
+#        Default:     "|cff7289da[Discord]|r"
+#
+#    ChatTransmitter.Link.CodeMinutes
+#        Description: Minutes a ".discord link" code can be used on Discord.
+#        Default:     10
+#
+
+ChatTransmitter.Relay.Channels = "World"
+ChatTransmitter.Relay.Guilds = ""
+ChatTransmitter.Relay.Prefix = "|cff7289da[Discord]|r"
+ChatTransmitter.Link.CodeMinutes = 10

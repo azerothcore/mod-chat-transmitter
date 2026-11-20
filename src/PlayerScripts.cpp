@@ -1,6 +1,7 @@
 #include "ChatTransmitter.h"
 #include "ScriptMgr.h"
 #include "SharedDefines.h"
+#include "Guild.h"
 
 namespace ModChatTransmitter
 {
@@ -9,7 +10,8 @@ namespace ModChatTransmitter
     public:
         PlayerScripts() : PlayerScript("ModChatTransmitterPlayerScripts", {
             PLAYERHOOK_CAN_PLAYER_USE_CHAT,
-            PLAYERHOOK_CAN_PLAYER_USE_CHANNEL_CHAT
+            PLAYERHOOK_CAN_PLAYER_USE_CHANNEL_CHAT,
+            PLAYERHOOK_CAN_PLAYER_USE_GUILD_CHAT
         })
         { }
 
@@ -30,6 +32,15 @@ namespace ModChatTransmitter
                     return true;
             }
             ChatTransmitter::Instance().QueueChat(player, type, msg, channel);
+
+            return true;
+        }
+
+        // Guild chat (not officer chat) of the guilds in ChatTransmitter.Relay.Guilds
+        bool OnPlayerCanUseChat(Player* player, uint32 type, uint32/* lang*/, std::string& msg, Guild* guild) override
+        {
+            if (type == CHAT_MSG_GUILD && guild)
+                ChatTransmitter::Instance().QueueGuildChat(player, msg, guild);
 
             return true;
         }

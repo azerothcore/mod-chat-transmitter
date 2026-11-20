@@ -26,6 +26,8 @@ namespace ModChatTransmitter
         void Run(const std::string& host, int port, const std::string& path);
         void QueueRequest(IRequest* request);
         bool IsReady();
+        // True when nothing is waiting to be written
+        bool IsIdle();
         bool GetReceivedMessage(std::string &data);
         void Close();
 

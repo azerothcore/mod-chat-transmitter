@@ -25,9 +25,17 @@ namespace ModChatTransmitter
         InitializeDatabase(LoginDatabase.GetConnectionInfo(), &authConnInfo, &authSqlQueue, &authDatabase);
         InitializeDatabase(CharacterDatabase.GetConnectionInfo(), &charsConnInfo, &charsSqlQueue, &charsDatabase);
         InitializeDatabase(WorldDatabase.GetConnectionInfo(), &worldConnInfo, &worldSqlQueue, &worldDatabase);
-        InitializeDatabase(ChatTransmitter::Instance().GetElunaDatabaseInfo(), &elunaConnInfo, &elunaSqlQueue, &elunaDatabase);
-        if (!authDatabase || !charsDatabase || !worldDatabase || !elunaDatabase)
+#if CHAT_TRANSMITTER_ELUNA
+        // The Eluna database is optional: leave ChatTransmitter.ElunaDatabaseInfo empty to skip it.
+        std::string const elunaInfo = ChatTransmitter::Instance().GetElunaDatabaseInfo();
+        if (!elunaInfo.empty())
         {
+            InitializeDatabase(elunaInfo, &elunaConnInfo, &elunaSqlQueue, &elunaDatabase);
+        }
+#endif
+        if (!authDatabase || !charsDatabase || !worldDatabase)
+        {
+            Cleanup();
             return;
         }
 
@@ -102,7 +110,7 @@ namespace ModChatTransmitter
             db = worldDatabase;
             break;
         case QueryDatabase::Eluna:
-            db = elunaDatabase;
+            db = elunaDatabase; // nullptr when built without Eluna or when it is not set up
             break;
         default:
             return;
@@ -203,7 +211,8 @@ namespace ModChatTransmitter
         uint32 res = (*database)->Open();
         if (res)
         {
-            LOG_ERROR("module", "[ChatTransmitter] Could not open connection to database: err {}", res);
+            LOG_ERROR("module", "[ChatTransmitter] Could not open connection to database {}: err {}", (*connInfo)->database, res);
+            delete *database;
             *database = nullptr;
         }
     }
@@ -218,9 +227,15 @@ namespace ModChatTransmitter
     void DatabaseManager::CleanupDatabase(MySQLConnectionInfo* connInfo, ProducerConsumerQueue<SQLOperation*>* sqlQueue, ChatTransmitterDatabaseConnection** database)
     {
         // Close() joins the connection's worker thread, which only exits once its queue is cancelled
-        sqlQueue->Cancel();
-        (*database)->Close();
-        delete *database;
+        if (sqlQueue)
+        {
+            sqlQueue->Cancel();
+        }
+        if (*database)
+        {
+            (*database)->Close();
+            delete *database;
+        }
         delete sqlQueue;
         delete connInfo;
 
@@ -270,5 +285,7 @@ namespace ModChatTransmitter
         CleanupDatabase(charsConnInfo, charsSqlQueue, &charsDatabase);
         CleanupDatabase(worldConnInfo, worldSqlQueue, &worldDatabase);
         CleanupDatabase(elunaConnInfo, elunaSqlQueue, &elunaDatabase);
+        authConnInfo = charsConnInfo = worldConnInfo = elunaConnInfo = nullptr;
+        authSqlQueue = charsSqlQueue = worldSqlQueue = elunaSqlQueue = nullptr;
     }
 }

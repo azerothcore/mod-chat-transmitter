@@ -55,6 +55,11 @@ namespace ModChatTransmitter
         return ready.load();
     }
 
+    bool WebSocketClient::IsIdle()
+    {
+        return workQueue.Empty() && !writing.load();
+    }
+
     void WebSocketClient::Resolve()
     {
         resolver.async_resolve(host, std::to_string(port).c_str(), beast::bind_front_handler(&WebSocketClient::OnResolve, this));

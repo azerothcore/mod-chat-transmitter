@@ -4,6 +4,8 @@
 #include <string>
 
 #include <Player.h>
+#include "AccountMgr.h"
+#include <nlohmann/json.hpp>
 
 namespace ModChatTransmitter
 {
@@ -17,11 +19,20 @@ namespace ModChatTransmitter
             raceId(player->getRace()),
             classId(player->getClass()),
             gender(player->getGender()),
-            accountGuid(player->GetSession()->GetAccountId()),
-            lastIpAddr(player->GetSession()->GetRemoteAddress())
+            accountGuid(0),
+            lastIpAddr("")
         {
-            AccountMgr::GetName(accountGuid, accountName);
+            // Account names, account ids and IP addresses stay on the server unless
+            // ChatTransmitter.SendAccountInfo is 1 (only for a bot that only staff can see).
+            if (SendPrivateAccountInfo())
+            {
+                accountGuid = player->GetSession()->GetAccountId();
+                lastIpAddr = player->GetSession()->GetRemoteAddress();
+                AccountMgr::GetName(accountGuid, accountName);
+            }
         }
+
+        static bool SendPrivateAccountInfo();
 
         PlayerInfo& operator=(const PlayerInfo& other)
         {
@@ -33,6 +44,7 @@ namespace ModChatTransmitter
             gender = other.gender;
             accountName = other.accountName;
             accountGuid = other.accountGuid;
+            lastIpAddr = other.lastIpAddr;
 
             return *this;
         }

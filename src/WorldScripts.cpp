@@ -21,12 +21,12 @@ namespace ModChatTransmitter
 
         void OnShutdown() override
         {
-            ChatTransmitter::Instance().Stop();
+            ChatTransmitter::Instance().Stop(true);
         }
 
-        void OnUpdate(uint32) override
+        void OnUpdate(uint32 diff) override
         {
-            ChatTransmitter::Instance().Update();
+            ChatTransmitter::Instance().Update(diff);
         }
 
         void OnAfterConfigLoad(bool reload) override
@@ -36,8 +36,9 @@ namespace ModChatTransmitter
                 return;
             }
 
-            ChatTransmitter::Instance().Stop();
-            ChatTransmitter::Instance().Start();
+            // A config reload reconnects without telling Discord that the server went off and on
+            ChatTransmitter::Instance().Stop(false);
+            ChatTransmitter::Instance().Start(false);
         }
     };
 
