@@ -90,8 +90,15 @@ namespace ModChatTransmitter
         }
     }
 
+    std::recursive_mutex& EventsLock()
+    {
+        static std::recursive_mutex lock;
+        return lock;
+    }
+
     void LoadKilledBosses()
     {
+        std::lock_guard<std::recursive_mutex> eventsGuard(EventsLock());
         killedBosses.clear();
         if (QueryResult result = CharacterDatabase.Query("SELECT `entry`, `difficulty` FROM `chat_transmitter_boss_kills`"))
         {
@@ -106,6 +113,7 @@ namespace ModChatTransmitter
 
     void ProcessPendingEvents()
     {
+        std::lock_guard<std::recursive_mutex> eventsGuard(EventsLock());
         if (pendingDeaths.empty())
         {
             return;
@@ -145,6 +153,7 @@ namespace ModChatTransmitter
 
         void OnPlayerJustDied(Player* player) override
         {
+            std::lock_guard<std::recursive_mutex> eventsGuard(EventsLock());
             if (DeathWanted(player))
             {
                 Pending(player);
@@ -153,6 +162,7 @@ namespace ModChatTransmitter
 
         void OnPlayerKilledByCreature(Creature* killer, Player* killed) override
         {
+            std::lock_guard<std::recursive_mutex> eventsGuard(EventsLock());
             if (!DeathWanted(killed))
             {
                 return;
@@ -168,6 +178,7 @@ namespace ModChatTransmitter
 
         void OnPlayerLevelChanged(Player* player, uint8 oldLevel) override
         {
+            std::lock_guard<std::recursive_mutex> eventsGuard(EventsLock());
             uint8 level = player->GetLevel();
             if (Skip(player) || level <= oldLevel || !ChatTransmitter::Instance().Settings().levelMilestones.count(level))
             {
@@ -183,11 +194,13 @@ namespace ModChatTransmitter
 
         void OnPlayerLogin(Player* player) override
         {
+            std::lock_guard<std::recursive_mutex> eventsGuard(EventsLock());
             EventPollerLogin(player);
         }
 
         void OnPlayerLogout(Player* player) override
         {
+            std::lock_guard<std::recursive_mutex> eventsGuard(EventsLock());
             EventPollerLogout(player);
             pendingDeaths.erase(player->GetGUID().GetCounter());
         }
@@ -200,6 +213,7 @@ namespace ModChatTransmitter
 
         void OnUnitDeath(Unit* unit, Unit* killer) override
         {
+            std::lock_guard<std::recursive_mutex> eventsGuard(EventsLock());
             ChatTransmitter& ct = ChatTransmitter::Instance();
             uint32 mode = ct.Settings().bossKills;
             Creature* boss = unit ? unit->ToCreature() : nullptr;

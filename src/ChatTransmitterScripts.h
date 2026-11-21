@@ -2,6 +2,7 @@
 #define _MOD_CHAT_TRANSMITTER_SCRIPTS_H_
 
 #include "Define.h"
+#include <mutex>
 
 class Player;
 
@@ -13,6 +14,8 @@ namespace ModChatTransmitter
     void AddLinkCommandScripts();
 
     // EventScripts.cpp: sends the deaths seen during the last world update
+    // one lock for the event hooks' shared state (deaths, boss kills, the poller), safe with MapUpdate.Threads > 1
+    std::recursive_mutex& EventsLock();
     void ProcessPendingEvents();
     // EventScripts.cpp: loads the bosses that were already killed (for realm first kills)
     void LoadKilledBosses();

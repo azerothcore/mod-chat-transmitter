@@ -151,6 +151,7 @@ namespace ModChatTransmitter
 
     void StartEventPoller()
     {
+        std::lock_guard<std::recursive_mutex> eventsGuard(EventsLock());
         ChatTransmitter::EventSettings const& s = ChatTransmitter::Instance().Settings();
         pollTimer = 0;
         LoadKilledBosses();
@@ -189,6 +190,7 @@ namespace ModChatTransmitter
 
     void EventPollerLogin(Player* player)
     {
+        std::lock_guard<std::recursive_mutex> eventsGuard(EventsLock());
         ChatTransmitter& ct = ChatTransmitter::Instance();
         if (!expeditionsAvailable || !ct.IsEnabled() || (ct.IgnoreBots() && ChatTransmitter::IsBot(player)))
         {
@@ -221,6 +223,7 @@ namespace ModChatTransmitter
 
     void EventPollerLogout(Player* player)
     {
+        std::lock_guard<std::recursive_mutex> eventsGuard(EventsLock());
         ObjectGuid::LowType guid = player->GetGUID().GetCounter();
         watched.erase(guid);
         baseline.erase(guid);
@@ -228,6 +231,7 @@ namespace ModChatTransmitter
 
     void UpdateEventPoller(uint32 diff)
     {
+        std::lock_guard<std::recursive_mutex> eventsGuard(EventsLock());
         callbacks.ProcessReadyCallbacks();
 
         pollTimer += diff;
