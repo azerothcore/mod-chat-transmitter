@@ -361,10 +361,7 @@ namespace ModChatTransmitter
             {
                 HandleCommand(data.at("id").get<std::string>(), data.at("command").get<std::string>());
             }
-            else if (message == "query")
-            {
-                HandleQuery(data.at("id").get<std::string>(), data.at("query").get<std::string>(), (QueryDatabase)data.at("database").get<int>());
-            }
+            // raw SQL "query" messages are not accepted (Temucraft): the bot reads the database with its own read-only user
             else if (message == "relayChat")
             {
                 HandleRelay(data);
@@ -644,18 +641,6 @@ namespace ModChatTransmitter
     {
         Command* cmdObj = new Command(id);
         sWorld->QueueCliCommand(new CliCommandHolder(cmdObj, command.c_str(), ChatTransmitter::OnCommandOutput, ChatTransmitter::OnCommandFinished));
-    }
-
-    void ChatTransmitter::HandleQuery(const std::string& id, const std::string& query, QueryDatabase dbType)
-    {
-        if (dbManager)
-        {
-            dbManager->QueueQuery(id, query, dbType);
-        }
-        else
-        {
-            QueueRequest(new Requests::QueryResult(id, false));
-        }
     }
 
     void ChatTransmitter::OnCommandOutput(void* arg, std::string_view text)

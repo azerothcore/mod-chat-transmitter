@@ -107,7 +107,6 @@ namespace ModChatTransmitter
         void QueueRequest(IRequest* req);
         void HandleMessage(std::string const& json);
         void HandleCommand(const std::string& id, const std::string& command);
-        void HandleQuery(const std::string& id, const std::string& query, QueryDatabase dbType);
         void HandleRelay(nlohmann::json const& data);
         void HandleLink(nlohmann::json const& data);
         void HandleUnlink(nlohmann::json const& data);
